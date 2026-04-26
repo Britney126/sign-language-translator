@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string
+    //   - hasCompletedOnboarding: bool
+    //   - createdAt: timestamp
+    //   - lastLogin: timestamp
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid is string &&
+             data.email is string &&
+             (!('hasCompletedOnboarding' in data) || data.hasCompletedOnboarding is bool);
+    }
+
+    function isValidRoom(data) {
+      return data.keys().hasAll(['name', 'createdBy', 'members']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.createdBy is string &&
+             data.members is list && data.members.size() < 100;
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['senderId', 'senderName', 'text']) &&
+             data.senderId is string &&
+             data.senderName is string &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 1000;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidRoom(request.resource.data) && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        // Allow members to join/leave
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']) ||
+        // Allow creator to update name
+        (resource.data.createdBy == request.auth.uid && isValidRoom(request.resource.data))
+      );
+
+      match /messages/{messageId} {
+        allow read: if true;
+        allow create: if isAuthenticated() && isValidMessage(request.resource.data) && request.resource.data.senderId == request.auth.uid;
+      }
+    }
+  }
+}

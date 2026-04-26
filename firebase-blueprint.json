@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Stores user preferences and onboarding status",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User's unique ID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "hasCompletedOnboarding": { "type": "boolean", "description": "Whether the user has finished the tutorial" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "LearningRoom": {
+      "title": "LearningRoom",
+      "description": "A collaborative learning space",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "members": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "name", "createdBy"]
+    },
+    "RoomMessage": {
+      "title": "RoomMessage",
+      "description": "A message sent in a learning room",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "roomId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "roomId", "senderId", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile and settings"
+    },
+    "/rooms/{roomId}": {
+      "schema": "LearningRoom",
+      "description": "Collaborative learning rooms"
+    },
+    "/rooms/{roomId}/messages/{messageId}": {
+      "schema": "RoomMessage",
+      "description": "Messages within a room"
+    }
+  }
+}

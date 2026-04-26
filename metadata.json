@@ -1,0 +1,5 @@
+{
+  "name": "语隙 (YuXi) - 手语无障碍翻译助手",
+  "description": "基于多模态大模型的网页端手语-文字双向无障碍翻译助手，旨在弥合听障群体与大众之间的沟通鸿沟。",
+  "requestFramePermissions": ["camera", "microphone"]
+}
